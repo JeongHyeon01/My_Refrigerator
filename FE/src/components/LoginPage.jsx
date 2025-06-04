@@ -104,6 +104,12 @@ const LoginPage = () => {
         </a>
       </div>
 
+      <div style={{ textAlign: 'center', marginTop: '10px' }}>
+        <a href="/reset-password" style={{ color: '#ff8888', textDecoration: 'underline' }}>
+          비밀번호 재설정
+        </a>
+      </div>
+
       <div className="section sns-buttons" style={{ marginTop: '2rem' }}>
         <h2>SNS 로그인으로 간편하게 시작하기</h2>
         <button onClick={handleGoogleLogin} disabled={loading}>
