@@ -1,3 +1,4 @@
+// src/components/LoginPage.jsx
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -94,6 +95,12 @@ const LoginPage = () => {
       <div style={{ textAlign: 'center', marginTop: '15px' }}>
         <a href="/signup" style={{ color: '#ffcc00', textDecoration: 'underline' }}>
           회원가입
+        </a>
+      </div>
+
+      <div style={{ textAlign: 'center', marginTop: '10px' }}>
+        <a href="/find-id" style={{ color: '#00ccff', textDecoration: 'underline' }}>
+          아이디(이메일) 찾기
         </a>
       </div>
 
