@@ -21,25 +21,40 @@ const ResetPasswordPage = () => {
   };
 
   return (
-    <div style={{ padding: '2rem' }}>
-      <h2>🔐 비밀번호 재설정</h2>
-      <form onSubmit={handleReset}>
-        <input
-          type="email"
-          placeholder="가입한 이메일 주소 입력"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-          style={{ width: '100%', padding: '0.5rem' }}
-        />
-        <button type="submit" style={{ marginTop: '1rem' }}>재설정 메일 보내기</button>
-      </form>
-      {message && <p style={{ color: 'green' }}>{message}</p>}
-      {error && <p style={{ color: 'red' }}>{error}</p>}
+    <div className="page-center">
+      <div className="form-card">
+        <h1 style={{ textAlign: 'center', marginBottom: '1rem' }}>🍳 나의 냉장고</h1>
+        <h2 style={{ textAlign: 'center' }}>🔐 비밀번호 재설정</h2>
 
-      <p style={{ textAlign: 'center', marginTop: 15 }}>
-        <a href="/login" style={{ textDecoration: 'underline', color: '#6666ff' }}>로그인 페이지로 돌아가기</a>
-      </p>
+        <form onSubmit={handleReset} style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '1rem' }}>
+          <input
+            type="email"
+            placeholder="가입한 이메일 주소 입력"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            style={{ padding: '0.5rem' }}
+          />
+          <button
+            type="submit"
+            style={{
+              padding: '0.6rem',
+              backgroundColor: '#4caf50',
+              color: 'white',
+              border: 'none'
+            }}
+          >
+            재설정 메일 보내기
+          </button>
+        </form>
+
+        {message && <p style={{ color: 'green', marginTop: '1rem' }}>{message}</p>}
+        {error && <p style={{ color: 'red', marginTop: '1rem' }}>{error}</p>}
+
+        <p style={{ textAlign: 'center', marginTop: '2rem' }}>
+          <a href="/login">로그인 페이지로 돌아가기</a>
+        </p>
+      </div>
     </div>
   );
 };

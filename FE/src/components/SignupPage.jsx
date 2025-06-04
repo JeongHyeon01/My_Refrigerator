@@ -1,4 +1,3 @@
-// src/components/SignupPage.jsx
 import React, { useState } from 'react';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
@@ -53,34 +52,33 @@ const SignupPage = () => {
   };
 
   return (
-    <div>
-      <h2>회원가입</h2>
-      <form onSubmit={handleSubmit}>
-        <label>
-          이메일:
-          <input type="email" name="email" value={form.email} onChange={handleChange} />
-          <div>{errors.email}</div>
-        </label>
-        <label>
-          비밀번호:
-          <input type="password" name="password" value={form.password} onChange={handleChange} />
-          <div>{errors.password}</div>
-        </label>
-        <label>
-          비밀번호 확인:
-          <input type="password" name="confirmPassword" value={form.confirmPassword} onChange={handleChange} />
-          <div>{errors.confirmPassword}</div>
-        </label>
-        <label>
-          닉네임:
-          <input type="text" name="nickname" value={form.nickname} onChange={handleChange} />
-          <div>{errors.nickname}</div>
-        </label>
-        <button type="submit">회원가입</button>
-      </form>
-      <p style={{ textAlign: 'center', marginTop: 15 }}>
-        <a href="/login">로그인</a>
-      </p>
+    <div className="page-center">
+      <div className="form-card">
+        <h1 style={{ textAlign: 'center', marginBottom: '1rem' }}>🍳 나의 냉장고</h1>
+        <h2 style={{ textAlign: 'center' }}>📝 회원가입</h2>
+
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          <input type="email" name="email" placeholder="이메일" value={form.email} onChange={handleChange} />
+          <div style={{ color: 'red' }}>{errors.email}</div>
+
+          <input type="password" name="password" placeholder="비밀번호" value={form.password} onChange={handleChange} />
+          <div style={{ color: 'red' }}>{errors.password}</div>
+
+          <input type="password" name="confirmPassword" placeholder="비밀번호 확인" value={form.confirmPassword} onChange={handleChange} />
+          <div style={{ color: 'red' }}>{errors.confirmPassword}</div>
+
+          <input type="text" name="nickname" placeholder="닉네임" value={form.nickname} onChange={handleChange} />
+          <div style={{ color: 'red' }}>{errors.nickname}</div>
+
+          <button type="submit" style={{ padding: '0.6rem', backgroundColor: '#4caf50', color: 'white', border: 'none' }}>
+            회원가입
+          </button>
+        </form>
+
+        <p style={{ textAlign: 'center', marginTop: '1.5rem' }}>
+          <a href="/login">로그인 페이지로 돌아가기</a>
+        </p>
+      </div>
     </div>
   );
 };

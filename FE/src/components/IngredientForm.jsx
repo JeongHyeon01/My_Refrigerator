@@ -1,4 +1,3 @@
-// src/components/IngredientForm.jsx
 import React, { useState } from 'react';
 
 const IngredientForm = ({ onSubmit }) => {

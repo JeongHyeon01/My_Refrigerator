@@ -28,24 +28,43 @@ const FindIDPage = () => {
   };
 
   return (
-    <div style={{ padding: '2rem' }}>
-      <h2>🔎 아이디 찾기</h2>
-      <form onSubmit={handleFindID}>
-        <input
-          type="text"
-          placeholder="가입 시 입력한 이름(닉네임)"
-          value={nickname}
-          onChange={(e) => setNickname(e.target.value)}
-          required
-        />
-        <button type="submit" style={{ marginLeft: '10px' }}>아이디 찾기</button>
-      </form>
-      {email && <p>📧 등록된 이메일: {email}</p>}
-      {error && <p style={{ color: 'red' }}>{error}</p>}
+    <div className="page-center">
+      <div className="form-card">
+        <h1 style={{ textAlign: 'center', marginBottom: '1rem' }}>🍳 나의 냉장고</h1>
+        <h2 style={{ textAlign: 'center' }}>🔎 아이디(이메일) 찾기</h2>
 
-      <p style={{ textAlign: 'center', marginTop: 15 }}>
-        <a href="/login" style={{ textDecoration: 'underline', color: '#6666ff' }}>로그인 페이지로 돌아가기</a>
-      </p>
+        <form onSubmit={handleFindID} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          <input
+            type="text"
+            placeholder="가입 시 입력한 이름(닉네임)"
+            value={nickname}
+            onChange={(e) => setNickname(e.target.value)}
+            required
+            style={{ padding: '0.5rem' }}
+          />
+          <button
+            type="submit"
+            style={{
+              padding: '0.6rem',
+              backgroundColor: '#4caf50',
+              color: 'white',
+              border: 'none',
+              cursor: 'pointer'
+            }}
+          >
+            아이디 찾기
+          </button>
+        </form>
+
+        {email && <p style={{ color: 'green', marginTop: '1rem' }}>📧 등록된 이메일: {email}</p>}
+        {error && <p style={{ color: 'red', marginTop: '1rem' }}>{error}</p>}
+
+        <p style={{ textAlign: 'center', marginTop: '2rem' }}>
+          <a href="/login" style={{ textDecoration: 'underline', color: '#2196f3' }}>
+            로그인 페이지로 돌아가기
+          </a>
+        </p>
+      </div>
     </div>
   );
 };
