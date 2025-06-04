@@ -1,5 +1,5 @@
-// src/components/RecipeRecommendation.jsx
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 const mockRecipes = [
   {
@@ -26,36 +26,54 @@ const mockRecipes = [
 ];
 
 const RecipeRecommendation = () => {
-  const [recipes, setRecipes] = useState(mockRecipes);
+  const [recipes] = useState(mockRecipes);
+  const navigate = useNavigate();
 
   return (
-    <div style={{ padding: '2rem' }}>
-      <h2>🍽️ 레시피 추천 결과</h2>
+    <div className="page-center">
+      <div className="form-card">
+        <h1 style={{ textAlign: 'center' }}>🍳 나의 냉장고</h1>
+        <h2 style={{ textAlign: 'center' }}>🍽️ 레시피 추천 결과</h2>
 
-      {recipes.map((recipe) => (
-        <div
-          key={recipe.id}
+        {recipes.map((recipe) => (
+          <div
+            key={recipe.id}
+            style={{
+              border: '1px solid #ccc',
+              borderRadius: '8px',
+              padding: '1rem',
+              marginBottom: '1rem',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '1rem',
+              backgroundColor: '#fff',
+            }}
+          >
+            <img src={recipe.image} alt={recipe.name} width="100" height="100" />
+            <div>
+              <h3>{recipe.name}</h3>
+              <p>재료: {recipe.ingredients.join(', ')}</p>
+              <p>추천 점수: {recipe.score}점</p>
+            </div>
+          </div>
+        ))}
+
+        <button
+          onClick={() => navigate('/main')}
           style={{
-            border: '1px solid #ccc',
-            borderRadius: '8px',
-            padding: '1rem',
-            marginBottom: '1rem',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '1rem',
+            marginTop: '1rem',
+            backgroundColor: '#4caf50',
+            color: 'white',
+            border: 'none',
+            padding: '0.6rem',
+            width: '100%',
           }}
         >
-          <img src={recipe.image} alt={recipe.name} width="100" height="100" />
-          <div>
-            <h3>{recipe.name}</h3>
-            <p>재료: {recipe.ingredients.join(', ')}</p>
-            <p>추천 점수: {recipe.score}점</p>
-          </div>
-        </div>
-      ))}
+          메인 페이지로 돌아가기
+        </button>
+      </div>
     </div>
   );
 };
 
 export default RecipeRecommendation;
-
