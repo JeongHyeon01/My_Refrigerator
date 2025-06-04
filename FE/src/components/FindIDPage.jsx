@@ -13,7 +13,7 @@ const FindIDPage = () => {
     setError('');
 
     try {
-      const q = query(collection(db, 'users'), where('nickname', '==', nickname));
+      const q = query(collection(db, 'users'), where('nickname', '==', nickname.trim()));
       const querySnapshot = await getDocs(q);
 
       if (!querySnapshot.empty) {
@@ -42,6 +42,10 @@ const FindIDPage = () => {
       </form>
       {email && <p>📧 등록된 이메일: {email}</p>}
       {error && <p style={{ color: 'red' }}>{error}</p>}
+
+      <p style={{ textAlign: 'center', marginTop: 15 }}>
+        <a href="/login" style={{ textDecoration: 'underline', color: '#6666ff' }}>로그인 페이지로 돌아가기</a>
+      </p>
     </div>
   );
 };

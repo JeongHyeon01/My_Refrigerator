@@ -36,6 +36,10 @@ const ResetPasswordPage = () => {
       </form>
       {message && <p style={{ color: 'green' }}>{message}</p>}
       {error && <p style={{ color: 'red' }}>{error}</p>}
+
+      <p style={{ textAlign: 'center', marginTop: 15 }}>
+        <a href="/login" style={{ textDecoration: 'underline', color: '#6666ff' }}>로그인 페이지로 돌아가기</a>
+      </p>
     </div>
   );
 };
