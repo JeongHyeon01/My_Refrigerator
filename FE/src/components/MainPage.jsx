@@ -7,10 +7,11 @@ import './MainPage.css';
 const MainPage = () => {
   const navigate = useNavigate();
   const [ingredients, setIngredients] = useState([]);
+  const [sortOption, setSortOption] = useState('');
 
   const handleLogout = async () => {
     await signOut(auth);
-    alert('로그아웃 되었습니다.');
+    alert("로그아웃 되었습니다.");
     navigate('/login');
   };
 
@@ -26,15 +27,26 @@ const MainPage = () => {
     const discarded = ingredients[index];
     alert(`"${discarded.name}"를 폐기 처리했습니다.`);
     setIngredients((prev) => prev.filter((_, i) => i !== index));
-    // 🔧 폐기 기록 저장은 추후 Firestore에 연동 가능
   };
+
+  const sortedIngredients = [...ingredients].sort((a, b) => {
+    if (sortOption === 'name-asc') {
+      return a.name.localeCompare(b.name);
+    } else if (sortOption === 'name-desc') {
+      return b.name.localeCompare(a.name);
+    } else if (sortOption === 'expiry-soon') {
+      return new Date(a.expiryDate) - new Date(b.expiryDate);
+    } else if (sortOption === 'expiry-late') {
+      return new Date(b.expiryDate) - new Date(a.expiryDate);
+    }
+    return 0;
+  });
 
   return (
     <div className="main-layout">
       <div className="main-left">
         <h2>👋 환영합니다!</h2>
 
-        {/* 식재료 등록 폼 */}
         <form
           className="ingredient-form"
           onSubmit={(e) => {
@@ -59,7 +71,6 @@ const MainPage = () => {
           <button type="submit">등록</button>
         </form>
 
-        {/* 기능 버튼들 */}
         <div className="main-actions">
           <button onClick={() => navigate('/recipes')} className="action-btn">🍽 레시피 추천 보기</button>
           <button onClick={() => navigate('/report')} className="action-btn">📊 낭비 리포트 보기</button>
@@ -67,13 +78,21 @@ const MainPage = () => {
         </div>
       </div>
 
-      {/* 등록된 식재료 목록 */}
       <div className="main-right">
         <h3>📋 등록된 식재료</h3>
-        {ingredients.length === 0 ? (
+
+        <select onChange={(e) => setSortOption(e.target.value)} style={{ marginBottom: '1rem', padding: '0.4rem' }}>
+          <option value="">정렬 선택</option>
+          <option value="name-asc">이름 오름차순</option>
+          <option value="name-desc">이름 내림차순</option>
+          <option value="expiry-soon">유통기한 임박 순</option>
+          <option value="expiry-late">유통기한 여유 순</option>
+        </select>
+
+        {sortedIngredients.length === 0 ? (
           <p>아직 등록된 식재료가 없습니다.</p>
         ) : (
-          ingredients.map((item, index) => (
+          sortedIngredients.map((item, index) => (
             <div key={index} className="ingredient-card">
               <strong>{item.name}</strong> - {item.quantity}개 ({item.expiryDate})
               <div style={{ marginTop: '0.5rem' }}>
