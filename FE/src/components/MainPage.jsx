@@ -7,7 +7,8 @@ import './MainPage.css';
 const MainPage = () => {
   const navigate = useNavigate();
   const [ingredients, setIngredients] = useState([]);
-  const [sortOption, setSortOption] = useState('');
+  const [sortOption, setSortOption] = useState([]);
+  const [quantities, setQuantities] = useState({});
 
   const handleLogout = async () => {
     await signOut(auth);
@@ -19,26 +20,70 @@ const MainPage = () => {
     setIngredients((prev) => [...prev, form]);
   };
 
+  const handleQuantityChange = (index, value) => {
+    setQuantities((prev) => ({ ...prev, [index]: value }));
+  };
+
+  const updateQuantity = (index, newQty) => {
+    setIngredients((prev) =>
+      prev.map((item, i) =>
+        i === index ? { ...item, quantity: newQty } : item
+      )
+    );
+  };
+
   const handleDelete = (index) => {
-    setIngredients((prev) => prev.filter((_, i) => i !== index));
+    const removeQty = Number(quantities[index] || 1);
+    const current = ingredients[index];
+
+    if (removeQty >= current.quantity) {
+      setIngredients((prev) => prev.filter((_, i) => i !== index));
+    } else {
+      updateQuantity(index, current.quantity - removeQty);
+    }
   };
 
   const handleDiscard = (index) => {
-    const discarded = ingredients[index];
-    alert(`"${discarded.name}"를 폐기 처리했습니다.`);
-    setIngredients((prev) => prev.filter((_, i) => i !== index));
+    const discardQty = Number(quantities[index] || 1);
+    const current = ingredients[index];
+
+    alert(`"${current.name}"를 ${discardQty}개 폐기했습니다.`);
+
+    if (discardQty >= current.quantity) {
+      setIngredients((prev) => prev.filter((_, i) => i !== index));
+    } else {
+      updateQuantity(index, current.quantity - discardQty);
+    }
+  };
+
+  const handleUse = (index) => {
+    const useQty = Number(quantities[index] || 1);
+    const current = ingredients[index];
+
+    alert(`"${current.name}"를 ${useQty}개 사용했습니다.`);
+
+    if (useQty >= current.quantity) {
+      setIngredients((prev) => prev.filter((_, i) => i !== index));
+    } else {
+      updateQuantity(index, current.quantity - useQty);
+    }
+  };
+
+  const handleModify = (index) => {
+    const newQty = Number(quantities[index]);
+    if (isNaN(newQty) || newQty < 1) {
+      alert("올바른 수량을 입력하세요.");
+      return;
+    }
+    updateQuantity(index, newQty);
+    alert("수정되었습니다.");
   };
 
   const sortedIngredients = [...ingredients].sort((a, b) => {
-    if (sortOption === 'name-asc') {
-      return a.name.localeCompare(b.name);
-    } else if (sortOption === 'name-desc') {
-      return b.name.localeCompare(a.name);
-    } else if (sortOption === 'expiry-soon') {
-      return new Date(a.expiryDate) - new Date(b.expiryDate);
-    } else if (sortOption === 'expiry-late') {
-      return new Date(b.expiryDate) - new Date(a.expiryDate);
-    }
+    if (sortOption === 'name-asc') return a.name.localeCompare(b.name);
+    if (sortOption === 'name-desc') return b.name.localeCompare(a.name);
+    if (sortOption === 'expiry-soon') return new Date(a.expiryDate) - new Date(b.expiryDate);
+    if (sortOption === 'expiry-late') return new Date(b.expiryDate) - new Date(a.expiryDate);
     return 0;
   });
 
@@ -53,7 +98,7 @@ const MainPage = () => {
             e.preventDefault();
             const data = {
               name: e.target.name.value,
-              quantity: e.target.quantity.value,
+              quantity: parseInt(e.target.quantity.value),
               expiryDate: e.target.expiryDate.value,
             };
             if (!data.name || !data.quantity || !data.expiryDate) {
@@ -96,31 +141,18 @@ const MainPage = () => {
             <div key={index} className="ingredient-card">
               <strong>{item.name}</strong> - {item.quantity}개 ({item.expiryDate})
               <div style={{ marginTop: '0.5rem' }}>
-                <button
-                  onClick={() => handleDiscard(index)}
-                  style={{
-                    marginRight: '0.5rem',
-                    backgroundColor: '#ff9800',
-                    color: '#fff',
-                    border: 'none',
-                    padding: '0.3rem 0.6rem',
-                    borderRadius: '4px'
-                  }}
-                >
-                  폐기
-                </button>
-                <button
-                  onClick={() => handleDelete(index)}
-                  style={{
-                    backgroundColor: '#f44336',
-                    color: '#fff',
-                    border: 'none',
-                    padding: '0.3rem 0.6rem',
-                    borderRadius: '4px'
-                  }}
-                >
-                  삭제
-                </button>
+                <input
+                  type="number"
+                  min="1"
+                  placeholder="수량"
+                  value={quantities[index] || ''}
+                  onChange={(e) => handleQuantityChange(index, e.target.value)}
+                  style={{ width: '60px', marginRight: '0.5rem' }}
+                />
+                <button onClick={() => handleUse(index)} style={{ marginRight: '0.3rem' }}>사용</button>
+                <button onClick={() => handleModify(index)} style={{ marginRight: '0.3rem' }}>수정</button>
+                <button onClick={() => handleDiscard(index)} style={{ marginRight: '0.3rem' }}>폐기</button>
+                <button onClick={() => handleDelete(index)}>삭제</button>
               </div>
             </div>
           ))
