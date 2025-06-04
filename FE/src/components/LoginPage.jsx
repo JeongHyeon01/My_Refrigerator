@@ -1,71 +1,53 @@
-// src/components/LoginPage.jsx
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import {
-  signInWithEmailAndPassword,
-  signInWithPopup,
-  GoogleAuthProvider,
-  onAuthStateChanged,
-  signOut,
-} from 'firebase/auth';
+import React, { useState } from 'react';
+import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 import { auth } from '../firebase';
-
-const googleProvider = new GoogleAuthProvider();
+import { useNavigate, Link } from 'react-router-dom';
 
 const LoginPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user) {
-        navigate('/main');
-      }
-    });
-    return () => unsubscribe();
-  }, [navigate]);
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    setLoading(true);
     try {
       await signInWithEmailAndPassword(auth, email, password);
+      alert('로그인 성공!');
       navigate('/main');
     } catch (error) {
       alert('로그인 실패: ' + error.message);
-    } finally {
-      setLoading(false);
     }
   };
 
   const handleGoogleLogin = async () => {
-    setLoading(true);
+    const provider = new GoogleAuthProvider();
     try {
-      await signInWithPopup(auth, googleProvider);
+      await signInWithPopup(auth, provider);
+      alert('구글 로그인 성공!');
       navigate('/main');
     } catch (error) {
-      alert('SNS 로그인 실패: ' + error.message);
-    } finally {
-      setLoading(false);
+      alert('구글 로그인 실패: ' + error.message);
     }
   };
 
   return (
     <div className="page-center">
-      <div className="form-card">
-        <h1 style={{ textAlign: 'center', marginBottom: '1rem' }}>🍳 나의 냉장고</h1>
-        <h2 style={{ textAlign: 'center' }}>🔐 로그인</h2>
-
-        <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '1rem' }}>
+      <div className="form-card" style={{ maxWidth: '420px', width: '100%', margin: '0 auto' }}>
+        <h1 style={{ textAlign: 'center' }}>🍳 나의 냉장고</h1>
+        <h2 style={{ textAlign: 'center' }}>로그인</h2>
+        <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
           <input
             type="email"
             placeholder="이메일"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
-            style={{ padding: '0.5rem' }}
+            style={{
+              padding: '0.5rem',
+              maxWidth: '400px',
+              width: '100%',
+              marginBottom: '1rem'
+            }}
           />
           <input
             type="password"
@@ -73,30 +55,52 @@ const LoginPage = () => {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
-            style={{ padding: '0.5rem' }}
+            style={{
+              padding: '0.5rem',
+              maxWidth: '400px',
+              width: '100%',
+              marginBottom: '1rem'
+            }}
           />
           <button
             type="submit"
-            disabled={loading}
+            className="action-btn"
             style={{
+              width: '100%',
+              maxWidth: '400px',
               padding: '0.6rem',
               backgroundColor: '#4caf50',
               color: 'white',
-              border: 'none'
+              border: 'none',
+              borderRadius: '5px',
+              marginBottom: '1rem'
             }}
           >
-            {loading ? '로딩 중...' : '로그인'}
+            로그인
           </button>
         </form>
 
-        <div style={{ textAlign: 'center', marginTop: '1rem' }}>
-          <a href="/signup">회원가입</a> | <a href="/find-id">아이디 찾기</a> | <a href="/reset-password">비밀번호 재설정</a>
-        </div>
+        <button
+          onClick={handleGoogleLogin}
+          style={{
+            width: '100%',
+            maxWidth: '400px',
+            padding: '0.6rem',
+            backgroundColor: '#4285F4',
+            color: 'white',
+            border: 'none',
+            borderRadius: '5px',
+            margin: '0 auto 1rem auto',
+            display: 'block'
+          }}
+        >
+           Google로 로그인
+        </button>
 
-        <div style={{ marginTop: '2rem', textAlign: 'center' }}>
-          <button onClick={handleGoogleLogin} style={{ padding: '0.6rem', backgroundColor: '#4285F4', color: 'white', border: 'none' }}>
-            구글로 로그인
-          </button>
+        <div style={{ textAlign: 'center' }}>
+          <Link to="/signup" style={{ marginRight: '1rem' }}>회원가입</Link>
+          <Link to="/find-id" style={{ marginRight: '1rem' }}>아이디 찾기</Link>
+          <Link to="/reset-password">비밀번호 재설정</Link>
         </div>
       </div>
     </div>
