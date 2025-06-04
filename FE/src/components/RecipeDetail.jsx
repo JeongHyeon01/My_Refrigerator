@@ -25,19 +25,36 @@ const RecipeDetail = () => {
   const recipe = recipeData[id];
 
   if (!recipe) {
-    return <p>해당 레시피를 찾을 수 없습니다.</p>;
+    return (
+      <div style={{ textAlign: 'center', marginTop: '5rem' }}>
+        <h2>❌ 레시피를 찾을 수 없습니다.</h2>
+        <button onClick={() => navigate('/recipes')} style={buttonStyle}>
+          🔙 목록으로 돌아가기
+        </button>
+      </div>
+    );
   }
 
   return (
-    <div className="page-center">
-      <div className="form-card" style={{ maxWidth: '600px', textAlign: 'left' }}>
-        <h2>{recipe.name}</h2>
-        <h4>🧂 재료</h4>
-        <ul>{recipe.ingredients.map((i, idx) => <li key={idx}>{i}</li>)}</ul>
-        <h4>👨‍🍳 조리 순서</h4>
-        <ol>{recipe.steps.map((s, idx) => <li key={idx}>{s}</li>)}</ol>
+    <div style={pageStyle}>
+      <div style={cardStyle}>
+        <h2 style={{ textAlign: 'center', marginBottom: '1rem' }}>{recipe.name}</h2>
 
-        <button onClick={() => navigate('/recipes')} className="action-btn" style={{ marginTop: '1rem' }}>
+        <h4>🧂 재료</h4>
+        <ul style={listStyle}>
+          {recipe.ingredients.map((item, i) => (
+            <li key={i}>{item}</li>
+          ))}
+        </ul>
+
+        <h4>👨‍🍳 조리 순서</h4>
+        <ol style={listStyle}>
+          {recipe.steps.map((step, i) => (
+            <li key={i}>{step}</li>
+          ))}
+        </ol>
+
+        <button onClick={() => navigate('/recipes')} style={buttonStyle}>
           🔙 목록으로 돌아가기
         </button>
       </div>
@@ -46,3 +63,37 @@ const RecipeDetail = () => {
 };
 
 export default RecipeDetail;
+
+// 스타일 정의
+const pageStyle = {
+  display: 'flex',
+  justifyContent: 'center',
+  alignItems: 'center',
+  minHeight: '100vh',
+  backgroundColor: '#f8f9fa',
+  padding: '2rem'
+};
+
+const cardStyle = {
+  backgroundColor: '#fff',
+  padding: '2rem',
+  borderRadius: '10px',
+  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+  width: '100%',
+  maxWidth: '600px'
+};
+
+const listStyle = {
+  paddingLeft: '1.2rem',
+  marginBottom: '1rem'
+};
+
+const buttonStyle = {
+  marginTop: '1.5rem',
+  padding: '0.8rem 1.2rem',
+  backgroundColor: '#4caf50',
+  color: 'white',
+  border: 'none',
+  borderRadius: '6px',
+  cursor: 'pointer'
+};
