@@ -1,75 +1,142 @@
-import React from 'react';
-import { Bar } from 'react-chartjs-2';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { auth, db } from '../firebase';
+import { collection, query, where, getDocs } from 'firebase/firestore';
 import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  Title,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
   Tooltip,
   Legend,
-} from 'chart.js';
-
-ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
+  ResponsiveContainer
+} from 'recharts';
+import './WasteReport.css';
 
 const WasteReport = () => {
   const navigate = useNavigate();
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [monthlyData, setMonthlyData] = useState([]);
 
-  const data = {
-    labels: [
-      '1월', '2월', '3월', '4월', '5월', '6월',
-      '7월', '8월', '9월', '10월', '11월', '12월'
-    ],
-    datasets: [
-      {
-        label: '소비된 재료 수',
-        data: [12, 19, 14, 20, 18, 22, 25, 21, 19, 16, 13, 15],
-        backgroundColor: 'rgba(75, 192, 192, 0.7)',
-      },
-      {
-        label: '폐기된 재료 수',
-        data: [4, 7, 6, 9, 3, 5, 4, 6, 5, 3, 2, 4],
-        backgroundColor: 'rgba(255, 99, 132, 0.7)',
-      },
-    ],
+  const fetchMonthlyData = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      const userId = auth.currentUser?.uid;
+      
+      if (!userId) {
+        setMonthlyData([]);
+        setIsLoading(false);
+        return;
+      }
+
+      // 소비된 식재료 조회
+      const consumedQuery = query(
+        collection(db, 'consumed_ingredients'),
+        where('userId', '==', userId)
+      );
+      const consumedSnapshot = await getDocs(consumedQuery);
+      const consumedData = consumedSnapshot.docs.map(doc => ({
+        ...doc.data(),
+        consumedAt: new Date(doc.data().consumedAt)
+      }));
+
+      // 폐기된 식재료 조회 (폐기 이력 컬렉션에서 가져오기)
+      const discardedQuery = query(
+        collection(db, 'discarded_ingredients'),
+        where('userId', '==', userId)
+      );
+      const discardedSnapshot = await getDocs(discardedQuery);
+      const discardedData = discardedSnapshot.docs.map(doc => ({
+        ...doc.data(),
+        discardedAt: new Date(doc.data().discardedAt)
+      }));
+
+      // 월별 데이터 초기화
+      const monthlyStats = Array.from({ length: 12 }, (_, i) => ({
+        month: `${i + 1}월`,
+        consumed: 0,
+        discarded: 0
+      }));
+
+      // 소비된 식재료 월별 집계
+      consumedData.forEach(item => {
+        const month = item.consumedAt.getMonth();
+        monthlyStats[month].consumed += item.consumedQuantity || 1;
+      });
+
+      // 폐기된 식재료 월별 집계
+      discardedData.forEach(item => {
+        const month = item.discardedAt.getMonth();
+        monthlyStats[month].discarded += item.discardedQuantity || 1;
+      });
+
+      setMonthlyData(monthlyStats);
+    } catch (error) {
+      console.error('데이터 조회 실패:', error);
+      setError('데이터 조회에 실패했습니다.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const options = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      title: {
-        display: true,
-        text: '📊 월별 음식물 소비/폐기 통계',
-      },
-    },
-  };
+  useEffect(() => {
+    fetchMonthlyData();
+  }, []);
 
   return (
-    <div className="page-center">
-      <div className="form-card" style={{ width: '100%', maxWidth: '900px' }}>
-        <h1 style={{ textAlign: 'center' }}>🍳 나의 냉장고</h1>
-        <h2 style={{ textAlign: 'center' }}>📊 음식물 낭비 리포트</h2>
-
-        <div style={{ height: '300px', margin: '1rem 0' }}>
-          <Bar data={data} options={options} />
-        </div>
-
-        <button
-          onClick={() => navigate('/main')}
-          style={{
-            backgroundColor: '#4caf50',
-            color: 'white',
-            border: 'none',
-            padding: '0.6rem',
-            width: '100%',
-            borderRadius: '6px',
-          }}
+    <div className="report-layout">
+      <div className="header-actions">
+        <h2>📊 낭비 리포트</h2>
+        <button 
+          onClick={() => navigate('/main')} 
+          className="action-btn"
         >
-          메인 페이지로 돌아가기
+          🏠 메인 페이지로 돌아가기
         </button>
       </div>
+
+      {isLoading ? (
+        <p>로딩중...</p>
+      ) : error ? (
+        <div>
+          <p style={{ color: 'red' }}>{error}</p>
+          <button onClick={fetchMonthlyData}>다시 시도</button>
+        </div>
+      ) : (
+        <div className="chart-container">
+          <h3>월별 식재료 소비 및 폐기 현황</h3>
+          <ResponsiveContainer width="100%" height={400}>
+            <BarChart
+              data={monthlyData}
+              margin={{
+                top: 20,
+                right: 30,
+                left: 20,
+                bottom: 5,
+              }}
+            >
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="month" />
+              <YAxis />
+              <Tooltip />
+              <Legend />
+              <Bar 
+                dataKey="consumed" 
+                name="소비된 식재료" 
+                fill="#2196F3" 
+              />
+              <Bar 
+                dataKey="discarded" 
+                name="폐기된 식재료" 
+                fill="#F44336" 
+              />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      )}
     </div>
   );
 };

@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { signOut } from 'firebase/auth';
-import { auth } from '../firebase';
+import { signOut, onAuthStateChanged } from 'firebase/auth';
+import { auth, db } from '../firebase';
+import { collection, query, where, getDocs, addDoc, updateDoc, doc, deleteDoc, onSnapshot } from 'firebase/firestore';
 import './MainPage.css';
 
 const MainPage = () => {
@@ -9,6 +10,31 @@ const MainPage = () => {
   const [ingredients, setIngredients] = useState([]);
   const [sortOption, setSortOption] = useState([]);
   const [quantities, setQuantities] = useState({});
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        // 실시간 리스너 설정
+        const q = query(collection(db, 'ingredients'), where('userId', '==', user.uid));
+        const unsubscribeSnapshot = onSnapshot(q, (snapshot) => {
+          const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+          setIngredients(data);
+          setIsLoading(false);
+        }, (error) => {
+          console.error('실시간 데이터 구독 실패:', error);
+          setIsLoading(false);
+        });
+
+        return () => unsubscribeSnapshot();
+      } else {
+        setIngredients([]);
+        setIsLoading(false);
+      }
+    });
+
+    return () => unsubscribe();
+  }, []);
 
   const handleLogout = async () => {
     await signOut(auth);
@@ -16,67 +42,141 @@ const MainPage = () => {
     navigate('/login');
   };
 
-  const handleIngredientSubmit = (form) => {
-    setIngredients((prev) => [...prev, form]);
+  const handleIngredientSubmit = async (form) => {
+    try {
+      const userId = auth.currentUser?.uid;
+      if (!userId) {
+        alert('로그인이 필요합니다.');
+        return;
+      }
+      const newIngredient = {
+        ...form,
+        quantity: Number(form.quantity),
+        userId,
+      };
+      const docRef = await addDoc(collection(db, 'ingredients'), newIngredient);
+      setIngredients(prev => [...prev, { id: docRef.id, ...newIngredient }]);
+      alert('식재료가 등록되었습니다.');
+    } catch (error) {
+      console.error('식재료 등록 실패:', error);
+      alert('식재료 등록에 실패했습니다.');
+    }
   };
 
   const handleQuantityChange = (index, value) => {
     setQuantities((prev) => ({ ...prev, [index]: value }));
   };
 
-  const updateQuantity = (index, newQty) => {
-    setIngredients((prev) =>
-      prev.map((item, i) =>
-        i === index ? { ...item, quantity: newQty } : item
-      )
-    );
-  };
-
-  const handleDelete = (index) => {
-    const removeQty = Number(quantities[index] || 1);
-    const current = ingredients[index];
-
-    if (removeQty >= current.quantity) {
-      setIngredients((prev) => prev.filter((_, i) => i !== index));
-    } else {
-      updateQuantity(index, current.quantity - removeQty);
+  const updateQuantity = async (index, newQty) => {
+    try {
+      const ingredient = ingredients[index];
+      const docRef = doc(db, 'ingredients', ingredient.id);
+      await updateDoc(docRef, { quantity: newQty });
+      setIngredients((prev) =>
+        prev.map((item, i) =>
+          i === index ? { ...item, quantity: newQty } : item
+        )
+      );
+    } catch (error) {
+      console.error('수량 수정 실패:', error);
+      alert('수량 수정에 실패했습니다.');
     }
   };
 
-  const handleDiscard = (index) => {
-    const discardQty = Number(quantities[index] || 1);
-    const current = ingredients[index];
-
-    alert(`"${current.name}"를 ${discardQty}개 폐기했습니다.`);
-
-    if (discardQty >= current.quantity) {
-      setIngredients((prev) => prev.filter((_, i) => i !== index));
-    } else {
-      updateQuantity(index, current.quantity - discardQty);
+  const handleUse = async (index) => {
+    try {
+      const useQty = Number(quantities[index] || 1);
+      const current = ingredients[index];
+      const docRef = doc(db, 'ingredients', current.id);
+      
+      if (useQty >= current.quantity) {
+        // 소비된 식재료 기록
+        await addDoc(collection(db, 'consumed_ingredients'), {
+          name: current.name,
+          consumedQuantity: current.quantity,
+          consumedAt: new Date().toISOString(),
+          expiryDate: current.expiryDate,
+          userId: auth.currentUser.uid
+        });
+        
+        await deleteDoc(docRef);
+      } else {
+        // 소비된 식재료 기록
+        await addDoc(collection(db, 'consumed_ingredients'), {
+          name: current.name,
+          consumedQuantity: useQty,
+          consumedAt: new Date().toISOString(),
+          expiryDate: current.expiryDate,
+          userId: auth.currentUser.uid
+        });
+        
+        await updateDoc(docRef, { quantity: current.quantity - useQty });
+      }
+      alert('식재료가 사용 처리되었습니다.');
+    } catch (error) {
+      console.error('식재료 사용 처리 실패:', error);
+      alert('식재료 사용 처리에 실패했습니다.');
     }
   };
 
-  const handleUse = (index) => {
-    const useQty = Number(quantities[index] || 1);
-    const current = ingredients[index];
+  const handleDiscard = async (index) => {
+    try {
+      const discardQty = Number(quantities[index] || 1);
+      const current = ingredients[index];
+      const docRef = doc(db, 'ingredients', current.id);
+      
+      // 폐기된 식재료 기록
+      await addDoc(collection(db, 'discarded_ingredients'), {
+        name: current.name,
+        discardedQuantity: discardQty,
+        discardedAt: new Date().toISOString(),
+        expiryDate: current.expiryDate,
+        userId: auth.currentUser.uid
+      });
 
-    alert(`"${current.name}"를 ${useQty}개 사용했습니다.`);
-
-    if (useQty >= current.quantity) {
-      setIngredients((prev) => prev.filter((_, i) => i !== index));
-    } else {
-      updateQuantity(index, current.quantity - useQty);
+      if (discardQty >= current.quantity) {
+        await deleteDoc(docRef);
+      } else {
+        await updateDoc(docRef, { quantity: current.quantity - discardQty });
+      }
+      alert(`"${current.name}"를 ${discardQty}개 폐기했습니다.`);
+    } catch (error) {
+      console.error('식재료 폐기 실패:', error);
+      alert('식재료 폐기에 실패했습니다.');
     }
   };
 
-  const handleModify = (index) => {
-    const newQty = Number(quantities[index]);
-    if (isNaN(newQty) || newQty < 1) {
-      alert("올바른 수량을 입력하세요.");
-      return;
+  const handleDelete = async (index) => {
+    try {
+      const removeQty = Number(quantities[index] || 1);
+      const current = ingredients[index];
+      const docRef = doc(db, 'ingredients', current.id);
+      
+      if (removeQty >= current.quantity) {
+        await deleteDoc(docRef);
+      } else {
+        await updateDoc(docRef, { quantity: current.quantity - removeQty });
+      }
+      alert('식재료가 삭제되었습니다.');
+    } catch (error) {
+      console.error('식재료 삭제 실패:', error);
+      alert('식재료 삭제에 실패했습니다.');
     }
-    updateQuantity(index, newQty);
-    alert("수정되었습니다.");
+  };
+
+  const handleModify = async (index) => {
+    try {
+      const newQty = Number(quantities[index]);
+      if (isNaN(newQty) || newQty < 1) {
+        alert("올바른 수량을 입력하세요.");
+        return;
+      }
+      await updateQuantity(index, newQty);
+      alert("수정되었습니다.");
+    } catch (error) {
+      console.error('수량 수정 실패:', error);
+      alert('수량 수정에 실패했습니다.');
+    }
   };
 
   const sortedIngredients = [...ingredients].sort((a, b) => {
@@ -91,6 +191,26 @@ const MainPage = () => {
     <div className="main-layout">
       <div className="main-left">
         <h2>👋 환영합니다!</h2>
+
+        {/* 유통기한 임박 알림 */}
+        <div className="alert-section">
+          <h3>⚠️ 유통기한 임박 알림</h3>
+          {sortedIngredients
+            .filter(item => {
+              const expiryDate = new Date(item.expiryDate);
+              const today = new Date();
+              const diffTime = expiryDate - today;
+              const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+              return diffDays <= 3 && diffDays >= 0;
+            })
+            .map((item, index) => (
+              <div key={index} className="alert-card">
+                <strong>{item.name}</strong>
+                <div>유통기한: {item.expiryDate}</div>
+                <div>남은 일수: {Math.ceil((new Date(item.expiryDate) - new Date()) / (1000 * 60 * 60 * 24))}일</div>
+              </div>
+            ))}
+        </div>
 
         <form
           className="ingredient-form"
@@ -119,6 +239,7 @@ const MainPage = () => {
         <div className="main-actions">
           <button onClick={() => navigate('/recipes')} className="action-btn">🍽 레시피 추천 보기</button>
           <button onClick={() => navigate('/report')} className="action-btn">📊 낭비 리포트 보기</button>
+          <button onClick={() => navigate('/consumed')} className="action-btn">🥕 소비된 식재료 보기</button>
           <button onClick={handleLogout} className="logout-btn">🚪 로그아웃</button>
         </div>
       </div>
@@ -134,7 +255,9 @@ const MainPage = () => {
           <option value="expiry-late">유통기한 여유 순</option>
         </select>
 
-        {sortedIngredients.length === 0 ? (
+        {isLoading ? (
+          <p>로딩중...</p>
+        ) : sortedIngredients.length === 0 ? (
           <p>아직 등록된 식재료가 없습니다.</p>
         ) : (
           sortedIngredients.map((item, index) => (

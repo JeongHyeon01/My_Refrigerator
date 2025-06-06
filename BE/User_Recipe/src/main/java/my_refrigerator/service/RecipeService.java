@@ -1,54 +1,62 @@
 package my_refrigerator.service;
 
+import com.google.api.core.ApiFuture;
+import com.google.cloud.firestore.*;
+import com.google.firebase.cloud.FirestoreClient;
 import my_refrigerator.dto.RecipeDto;
 import my_refrigerator.entity.Recipe;
 import my_refrigerator.entity.UserIngredient;
-import my_refrigerator.repository.IngredientRepository;
-import my_refrigerator.repository.RecipeRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
+import java.util.concurrent.ExecutionException;
 
 @Service
 public class RecipeService {
-    private final IngredientRepository ingredientRepository;
-    private final RecipeRepository recipeRepository;
     private final WebClient webClient;
 
-    public RecipeService(IngredientRepository ingredientRepository,
-                         RecipeRepository recipeRepository) {
-        this.ingredientRepository = ingredientRepository;
-        this.recipeRepository = recipeRepository;
+    public RecipeService() {
         this.webClient = WebClient.create("http://localhost:5000");
     }
 
-    public List<RecipeDto> recommendRecipe() {
+    public List<RecipeDto> recommendRecipe() throws Exception {
         LocalDate aWeekLater = LocalDate.now().plusWeeks(1);
 
-        List<UserIngredient> expiring = ingredientRepository.
-                                            findByExpiryDateBefore(aWeekLater);
+        // Firestore에서 유통기한 임박 재료 조회
+        Firestore db = FirestoreClient.getFirestore();
+        CollectionReference ingredientsRef = db.collection("user_ingredients");
+        ApiFuture<QuerySnapshot> future = ingredientsRef.whereLessThan("expiryDate", aWeekLater.toString()).get();
+        List<QueryDocumentSnapshot> documents = future.get().getDocuments();
 
-        if (expiring.isEmpty()) {
+        if (documents.isEmpty()) {
             throw new IllegalStateException("유통기한 임박 재료가 없습니다.");
         }
 
-        List<String> keywords = expiring.stream().
-                                    sorted(Comparator.comparing(UserIngredient::getExpiryDate)).
-                                    limit(5).
-                                    map(UserIngredient::getName).
-                                    toList();
+        List<UserIngredient> expiring = new ArrayList<>();
+        for (QueryDocumentSnapshot doc : documents) {
+            expiring.add(doc.toObject(UserIngredient.class));
+        }
+
+        List<String> keywords = expiring.stream()
+                .sorted(Comparator.comparing(UserIngredient::getExpiryDate))
+                .limit(5)
+                .map(UserIngredient::getName)
+                .toList();
 
         List<RecipeDto> results = new ArrayList<>();
 
         for (String keyword : keywords) {
-            // 우선 DB 검색
-            List<Recipe> recipes = recipeRepository.findTop5ByNameContaining(keyword);
-            if (!recipes.isEmpty()) {
-                results.addAll(recipes.stream().map(this::toDto).toList());
+            // Firestore에서 레시피 검색
+            CollectionReference recipesRef = db.collection("recipes");
+            ApiFuture<QuerySnapshot> recipeFuture = recipesRef.whereGreaterThanOrEqualTo("name", keyword).get();
+            List<QueryDocumentSnapshot> recipeDocs = recipeFuture.get().getDocuments();
+
+            if (!recipeDocs.isEmpty()) {
+                for (QueryDocumentSnapshot doc : recipeDocs) {
+                    results.add(toDto(doc.toObject(Recipe.class)));
+                }
                 continue;
             }
 
@@ -56,9 +64,11 @@ public class RecipeService {
             List<RecipeDto> crawled = crawling(keyword);
             results.addAll(crawled);
 
-            // 크롤링 -> DB 저장
-            List<Recipe> dtoToEntity = crawled.stream().map(this::toEntity).toList();
-            recipeRepository.saveAll(dtoToEntity);
+            // 크롤링 -> Firestore 저장
+            for (RecipeDto dto : crawled) {
+                Recipe recipe = toEntity(dto);
+                recipesRef.add(recipe);
+            }
         }
 
         return results;
@@ -68,10 +78,10 @@ public class RecipeService {
         return webClient.get()
                 .uri(uriBuilder -> uriBuilder.path("/recommend")
                         .queryParam("keyword", keyword).build())
-                        .retrieve()
-                        .bodyToFlux(RecipeDto.class)
-                        .collectList()
-                        .block();
+                .retrieve()
+                .bodyToFlux(RecipeDto.class)
+                .collectList()
+                .block();
     }
 
     private RecipeDto toDto(Recipe recipe) {

@@ -137,3 +137,15 @@ dist
 venv/
 __pycache__/
 *.pyc
+
+# macOS 불필요 파일
+.DS_Store
+**/.DS_Store
+
+# Firebase
+firebase-debug.log
+.firebase/
+firebase-debug.*.log
+firebase-credentials.json
+firebase-config.json
+serviceAccountKey.json

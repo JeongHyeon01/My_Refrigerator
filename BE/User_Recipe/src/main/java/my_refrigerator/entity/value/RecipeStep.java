@@ -1,8 +1,5 @@
 package my_refrigerator.entity.value;
 
-import jakarta.persistence.Embeddable;
-
-@Embeddable
 public class RecipeStep {
     private String imageUrl;
     private String description;
@@ -11,12 +8,12 @@ public class RecipeStep {
         return imageUrl;
     }
 
-    public String getDescription() {
-        return description;
-    }
-
     public void setImageUrl(String imageUrl) {
         this.imageUrl = imageUrl;
+    }
+
+    public String getDescription() {
+        return description;
     }
 
     public void setDescription(String description) {
