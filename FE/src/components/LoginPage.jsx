@@ -31,23 +31,21 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="page-center">
-      <div className="form-card" style={{ maxWidth: '420px', width: '100%', margin: '0 auto' }}>
-        <h1 style={{ textAlign: 'center' }}>🍳 나의 냉장고</h1>
-        <h2 style={{ textAlign: 'center' }}>로그인</h2>
-        <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+    <div className="min-h-screen flex items-center justify-center bg-gray-100">
+      <div className="form-card max-w-md w-full p-8 bg-white rounded-2xl shadow-lg flex flex-col items-center">
+        <div className="flex items-center gap-2 mb-2">
+          <span className="text-3xl">🍳</span>
+          <h1 className="text-3xl font-bold text-gray-800">나의 냉장고</h1>
+        </div>
+        <h2 className="text-lg text-gray-600 mb-6">로그인</h2>
+        <form onSubmit={handleLogin} className="w-full flex flex-col gap-4 mb-4">
           <input
             type="email"
             placeholder="이메일"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
-            style={{
-              padding: '0.5rem',
-              maxWidth: '400px',
-              width: '100%',
-              marginBottom: '1rem'
-            }}
+            className="border rounded px-4 py-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-400"
           />
           <input
             type="password"
@@ -55,52 +53,25 @@ const LoginPage = () => {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
-            style={{
-              padding: '0.5rem',
-              maxWidth: '400px',
-              width: '100%',
-              marginBottom: '1rem'
-            }}
+            className="border rounded px-4 py-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-400"
           />
           <button
             type="submit"
-            className="action-btn"
-            style={{
-              width: '100%',
-              maxWidth: '400px',
-              padding: '0.6rem',
-              backgroundColor: '#4caf50',
-              color: 'white',
-              border: 'none',
-              borderRadius: '5px',
-              marginBottom: '1rem'
-            }}
+            className="w-full py-2 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition"
           >
             로그인
           </button>
         </form>
-
         <button
           onClick={handleGoogleLogin}
-          style={{
-            width: '100%',
-            maxWidth: '400px',
-            padding: '0.6rem',
-            backgroundColor: '#4285F4',
-            color: 'white',
-            border: 'none',
-            borderRadius: '5px',
-            margin: '0 auto 1rem auto',
-            display: 'block'
-          }}
+          className="w-full py-2 bg-blue-500 text-white rounded-lg font-semibold hover:bg-blue-600 transition mb-4"
         >
-           Google로 로그인
+          Google로 로그인
         </button>
-
-        <div style={{ textAlign: 'center' }}>
-          <Link to="/signup" style={{ marginRight: '1rem' }}>회원가입</Link>
-          <Link to="/find-id" style={{ marginRight: '1rem' }}>아이디 찾기</Link>
-          <Link to="/reset-password">비밀번호 재설정</Link>
+        <div className="flex gap-4 text-blue-500 text-sm mt-2">
+          <Link to="/signup" className="hover:underline">회원가입</Link>
+          <Link to="/find-id" className="hover:underline">아이디 찾기</Link>
+          <Link to="/reset-password" className="hover:underline">비밀번호 재설정</Link>
         </div>
       </div>
     </div>

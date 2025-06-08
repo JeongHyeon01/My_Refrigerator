@@ -149,3 +149,6 @@ firebase-debug.*.log
 firebase-credentials.json
 firebase-config.json
 serviceAccountKey.json
+
+# Gradle cache
+.gradle/

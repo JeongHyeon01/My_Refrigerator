@@ -8,16 +8,15 @@ const ConsumedIngredients = () => {
   const [ingredients, setIngredients] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [authChecked, setAuthChecked] = useState(false);
+  const [userId, setUserId] = useState(null);
 
-  const fetchIngredients = async () => {
+  const fetchIngredients = async (uid) => {
     try {
       setIsLoading(true);
       setError(null);
-      const userId = auth.currentUser?.uid;
-      console.log('현재 사용자 ID:', userId);
-
-      if (!userId) {
-        console.log('사용자 ID가 없습니다.');
+      // userId는 파라미터로 받음
+      if (!uid) {
         setIngredients([]);
         setIsLoading(false);
         return;
@@ -26,7 +25,7 @@ const ConsumedIngredients = () => {
       // 소비된 식재료 조회
       const consumedQuery = query(
         collection(db, 'consumed_ingredients'),
-        where('userId', '==', userId)
+        where('userId', '==', uid)
       );
       const consumedSnapshot = await getDocs(consumedQuery);
       const consumedData = consumedSnapshot.docs.map(doc => ({
@@ -39,7 +38,7 @@ const ConsumedIngredients = () => {
       // 폐기된 식재료 조회
       const discardedQuery = query(
         collection(db, 'discarded_ingredients'),
-        where('userId', '==', userId)
+        where('userId', '==', uid)
       );
       const discardedSnapshot = await getDocs(discardedQuery);
       const discardedData = discardedSnapshot.docs.map(doc => ({
@@ -51,10 +50,8 @@ const ConsumedIngredients = () => {
 
       // 두 데이터 합치기
       const allData = [...consumedData, ...discardedData];
-      
       // 날짜순 정렬
       allData.sort((a, b) => new Date(b.date) - new Date(a.date));
-      
       setIngredients(allData);
     } catch (error) {
       console.error('식재료 조회 실패:', error);
@@ -72,7 +69,7 @@ const ConsumedIngredients = () => {
     try {
       const collectionName = type === 'consumed' ? 'consumed_ingredients' : 'discarded_ingredients';
       await deleteDoc(doc(db, collectionName, id));
-      await fetchIngredients(); // 데이터 다시 로드
+      await fetchIngredients(userId); // 데이터 다시 로드
       alert('기록이 삭제되었습니다.');
     } catch (error) {
       console.error('기록 삭제 실패:', error);
@@ -83,15 +80,43 @@ const ConsumedIngredients = () => {
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((user) => {
       if (user) {
-        fetchIngredients();
+        setUserId(user.uid);
+        setAuthChecked(true);
       } else {
-        setIngredients([]);
-        setIsLoading(false);
+        setAuthChecked(true);
+        setUserId(null);
+        setError('로그인이 필요합니다.');
       }
     });
-
     return () => unsubscribe();
   }, []);
+
+  useEffect(() => {
+    if (authChecked && userId) {
+      fetchIngredients(userId);
+    }
+  }, [authChecked, userId]);
+
+  if (!authChecked) {
+    return (
+      <div className="recommend-layout">
+        <div className="recommend-card">
+          <p>인증 상태 확인 중...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="recommend-layout">
+        <div className="recommend-card">
+          <p className="recommend-error">{error}</p>
+          <button onClick={() => navigate('/login')} className="recommend-btn">로그인 페이지로</button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="recommend-layout">
@@ -99,11 +124,6 @@ const ConsumedIngredients = () => {
         <h2 className="recommend-title">🥕 소비/폐기된 식재료 목록</h2>
         {isLoading ? (
           <p>로딩중...</p>
-        ) : error ? (
-          <div>
-            <p className="recommend-error">{error}</p>
-            <button onClick={fetchIngredients} className="recommend-btn">다시 시도</button>
-          </div>
         ) : ingredients.length === 0 ? (
           <p>아직 기록된 식재료가 없습니다.</p>
         ) : (

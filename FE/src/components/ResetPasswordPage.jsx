@@ -18,43 +18,31 @@ const ResetPasswordPage = () => {
   };
 
   return (
-    <div className="page-center">
-      <div className="form-card" style={{ maxWidth: '420px', width: '100%', margin: '0 auto' }}>
-        <h1 style={{ textAlign: 'center' }}>🍳 나의 냉장고</h1>
-        <h2 style={{ textAlign: 'center' }}>🔐 비밀번호 재설정</h2>
-        <form onSubmit={handleResetPassword} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+    <div className="min-h-screen flex items-center justify-center bg-gray-100">
+      <div className="form-card max-w-md w-full p-8 bg-white rounded-2xl shadow-lg flex flex-col items-center">
+        <div className="flex items-center gap-2 mb-2">
+          <span className="text-3xl">🍳</span>
+          <h1 className="text-3xl font-bold text-gray-800">나의 냉장고</h1>
+        </div>
+        <h2 className="text-lg text-gray-600 mb-6">🔐 비밀번호 재설정</h2>
+        <form onSubmit={handleResetPassword} className="w-full flex flex-col gap-4 mb-4">
           <input
             type="email"
             placeholder="가입한 이메일 주소"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
-            style={{
-              padding: '0.5rem',
-              maxWidth: '400px',
-              width: '100%',
-              marginBottom: '1rem'
-            }}
+            className="border rounded px-4 py-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-400"
           />
           <button
             type="submit"
-            className="action-btn"
-            style={{
-              width: '100%',
-              maxWidth: '400px',
-              padding: '0.6rem',
-              backgroundColor: '#4caf50',
-              color: 'white',
-              border: 'none',
-              borderRadius: '5px'
-            }}
+            className="w-full py-2 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition"
           >
             재설정 이메일 보내기
           </button>
         </form>
-
-        <div style={{ textAlign: 'center', marginTop: '1.5rem' }}>
-          <Link to="/login">로그인 페이지로 돌아가기</Link>
+        <div className="text-blue-500 text-sm mt-2">
+          <Link to="/login" className="hover:underline">로그인 페이지로 돌아가기</Link>
         </div>
       </div>
     </div>
