@@ -41,7 +41,7 @@
 ```bash
 cd FE
 npm install
-npm start
+npm run dev
 ```
 
 ### 백엔드(Spring Boot)
@@ -52,11 +52,7 @@ cd BE/User_Recipe
 
 ### FastAPI (크롤링 서버)
 ```bash
-cd BE/User_Recipe/crawling_py
+cd MY_REFRIGERATOR
 pip install -r requirements.txt
-uvicorn main:app --reload
+python -m app.main
 ```
-
----
-
-자세한 환경 변수 및 실행 방법은 각 디렉토리의 README를 참고하세요.
