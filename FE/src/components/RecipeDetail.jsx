@@ -65,14 +65,18 @@ const RecipeDetail = () => {
         <h4>🧂 재료</h4>
         <ul className="detail-list">
           {recipe.ingredients?.map((item, i) => (
-            <li key={i}>{item}</li>
+            <li key={i}>
+              {typeof item === 'string' ? item : item.name || JSON.stringify(item)}
+            </li>
           ))}
         </ul>
 
         <h4>👨‍🍳 조리 순서</h4>
         <ol className="detail-list">
           {recipe.steps?.map((step, i) => (
-            <li key={i}>{step}</li>
+            <li key={i}>
+              {typeof step === 'string' ? step : step.description || JSON.stringify(step)}
+            </li>
           ))}
         </ol>
 

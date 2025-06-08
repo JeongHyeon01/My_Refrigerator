@@ -13,6 +13,7 @@ import MainPage from './components/MainPage';
 import RecipeRecommendation from './components/RecipeRecommendation';
 import WasteReport from './components/WasteReport';
 import ConsumedIngredients from './components/ConsumedIngredients';
+import RecipeDetail from './components/RecipeDetail';
 
 const Home: React.FC = () => {
   return null; // 홈 컴포넌트도 필요 없으므로 비워둡니다.
@@ -32,6 +33,7 @@ const App: React.FC = () => {
             <Route path="/signup" element={<SignupPage />} />
             <Route path="/main" element={<MainPage />} />
             <Route path="/recipes" element={<RecipeRecommendation />} />
+            <Route path="/recipes/:id" element={<RecipeDetail />} />
             <Route path="/report" element={<WasteReport />} />
             <Route path="/consumed" element={<ConsumedIngredients />} />
           </Routes>

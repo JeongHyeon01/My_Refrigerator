@@ -331,14 +331,14 @@ const RecipeRecommendation = () => {
               {getPaginationNumbers(currentPage, totalPages).map((page, idx) => (
                 typeof page === 'number' ? (
                   <button
-                    key={page}
+                    key={`page-btn-${page}`}
                     onClick={() => handlePageChange(page)}
                     className={`px-3 py-1 rounded ${currentPage===page ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'} transition`}
                   >
                     {page}
                   </button>
                 ) : (
-                  <span key={idx} className="px-2 text-gray-400">...</span>
+                  <span key={`ellipsis-${idx}`} className="px-2 text-gray-400">...</span>
                 )
               ))}
               <button onClick={() => handlePageChange(currentPage+1)} disabled={currentPage===totalPages} className="px-4 py-2 rounded bg-gray-200 text-gray-700 hover:bg-gray-300 disabled:opacity-50">다음</button>
